@@ -11,7 +11,8 @@ import kid_banner from "./Components/Assets/banner_kids.png";
 import LoginSignup from "./Pages/LoginSignup";
 
 export const backend_url =
-  "https://e-commerce-shopper-w3cx.onrender.com" || "http://localhost:4000";
+  "https://e-commerce-shopper-w3cx.onrender.com:4000" ||
+  "http://localhost:4000";
 console.log(process.env.REACT_APP_API_URL);
 export const currency = "$";
 
