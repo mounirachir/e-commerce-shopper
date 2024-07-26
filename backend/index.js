@@ -76,10 +76,7 @@ const Product = mongoose.model("Product", {
   avilable: { type: Boolean, default: true },
 });
 
-// ROOT API Route For Testing
-app.get("/", (req, res) => {
-  res.send("Root");
-});
+
 
 // Create an endpoint at ip/login for login the user and giving auth-token
 app.post("/login", async (req, res) => {
