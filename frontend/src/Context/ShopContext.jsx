@@ -25,7 +25,7 @@ const ShopContextProvider = (props) => {
       fetch(`${backend_url}/getcart`, {
         method: "POST",
         headers: {
-          Accept: "application/form-data",
+          Accept: "application/json",
           "auth-token": `${localStorage.getItem("auth-token")}`,
           "Content-Type": "application/json",
         },
@@ -78,7 +78,7 @@ const ShopContextProvider = (props) => {
       fetch(`${backend_url}/addtocart`, {
         method: "POST",
         headers: {
-          Accept: "application/form-data",
+          Accept: "application/json",
           "auth-token": `${localStorage.getItem("auth-token")}`,
           "Content-Type": "application/json",
         },
@@ -93,7 +93,7 @@ const ShopContextProvider = (props) => {
       fetch(`${backend_url}/removefromcart`, {
         method: "POST",
         headers: {
-          Accept: "application/form-data",
+          Accept: "application/json",
           "auth-token": `${localStorage.getItem("auth-token")}`,
           "Content-Type": "application/json",
         },
@@ -110,6 +110,7 @@ const ShopContextProvider = (props) => {
     removeFromCart,
     getTotalCartAmount,
   };
+
   return (
     <ShopContext.Provider value={contextValue}>
       {props.children}

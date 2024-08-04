@@ -7,18 +7,17 @@ const path = require("path");
 const cors = require("cors");
 const port = process.env.PORT || 4000;
 
+// Middleware
 app.use(express.json());
 app.use(cors());
 
 // Database Connection With MongoDB
 mongoose.connect(
-  "mongodb+srv://mistamounir02:gkw5bu350r@cluster0.r8xeksp.mongodb.net/e-commerce"
+  "mongodb+srv://mistamounir02:gkw5bu350r@cluster0.r8xeksp.mongodb.net/e-commerce",
+  { useNewUrlParser: true, useUnifiedTopology: true }
 );
 
-// paste your mongoDB Connection string above with password
-// password should not contain '@' special character
-
-//Image Storage Engine
+// Image Storage Engine
 const storage = multer.diskStorage({
   destination: "./upload/images",
   filename: (req, file, cb) => {
@@ -29,7 +28,7 @@ const storage = multer.diskStorage({
   },
 });
 const upload = multer({ storage: storage });
-app.post("/upload", upload.single("product"), (req, res) => {
+app.post("/api/upload", upload.single("product"), (req, res) => {
   res.json({
     success: 1,
     image_url: `/images/${req.file.filename}`,
@@ -37,9 +36,9 @@ app.post("/upload", upload.single("product"), (req, res) => {
 });
 
 // Route for Images folder
-app.use("/images", express.static("upload/images"));
+app.use("/api/images", express.static("upload/images"));
 
-// MiddleWare to fetch user from token
+// Middleware to fetch user from token
 const fetchuser = async (req, res, next) => {
   const token = req.header("auth-token");
   if (!token) {
@@ -54,7 +53,7 @@ const fetchuser = async (req, res, next) => {
   }
 };
 
-// Schema for creating user model
+// Schemas
 const Users = mongoose.model("Users", {
   name: { type: String },
   email: { type: String, unique: true },
@@ -63,7 +62,6 @@ const Users = mongoose.model("Users", {
   date: { type: Date, default: Date.now() },
 });
 
-// Schema for creating Product
 const Product = mongoose.model("Product", {
   id: { type: Number, required: true },
   name: { type: String, required: true },
@@ -76,10 +74,8 @@ const Product = mongoose.model("Product", {
   avilable: { type: Boolean, default: true },
 });
 
-
-
-// Create an endpoint at ip/login for login the user and giving auth-token
-app.post("/login", async (req, res) => {
+// API Routes
+app.post("/api/login", async (req, res) => {
   console.log("Login");
   let success = false;
   let user = await Users.findOne({ email: req.body.email });
@@ -92,7 +88,6 @@ app.post("/login", async (req, res) => {
         },
       };
       success = true;
-      console.log(user.id);
       const token = jwt.sign(data, "secret_ecom");
       res.json({ success, token });
     } else {
@@ -109,8 +104,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-//Create an endpoint at ip/auth for regestring the user & sending auth-token
-app.post("/signup", async (req, res) => {
+app.post("/api/signup", async (req, res) => {
   console.log("Sign Up");
   let success = false;
   let check = await Users.findOne({ email: req.body.email });
@@ -142,31 +136,27 @@ app.post("/signup", async (req, res) => {
   res.json({ success, token });
 });
 
-// endpoint for getting all products data
-app.get("/allproducts", async (req, res) => {
+app.get("/api/allproducts", async (req, res) => {
   let products = await Product.find({});
   console.log("All Products");
   res.send(products);
 });
 
-// endpoint for getting latest products data
-app.get("/newcollections", async (req, res) => {
+app.get("/api/newcollections", async (req, res) => {
   let products = await Product.find({});
   let arr = products.slice(0).slice(-8);
   console.log("New Collections");
   res.send(arr);
 });
 
-// endpoint for getting womens products data
-app.get("/popularinwomen", async (req, res) => {
+app.get("/api/popularinwomen", async (req, res) => {
   let products = await Product.find({ category: "women" });
   let arr = products.splice(0, 4);
   console.log("Popular In Women");
   res.send(arr);
 });
 
-// endpoint for getting womens products data
-app.post("/relatedproducts", async (req, res) => {
+app.post("/api/relatedproducts", async (req, res) => {
   console.log("Related Products");
   const { category } = req.body;
   const products = await Product.find({ category });
@@ -174,8 +164,7 @@ app.post("/relatedproducts", async (req, res) => {
   res.send(arr);
 });
 
-// Create an endpoint for saving the product in cart
-app.post("/addtocart", fetchuser, async (req, res) => {
+app.post("/api/addtocart", fetchuser, async (req, res) => {
   console.log("Add Cart");
   let userData = await Users.findOne({ _id: req.user.id });
   userData.cartData[req.body.itemId] += 1;
@@ -186,8 +175,7 @@ app.post("/addtocart", fetchuser, async (req, res) => {
   res.send("Added");
 });
 
-// Create an endpoint for removing the product in cart
-app.post("/removefromcart", fetchuser, async (req, res) => {
+app.post("/api/removefromcart", fetchuser, async (req, res) => {
   console.log("Remove Cart");
   let userData = await Users.findOne({ _id: req.user.id });
   if (userData.cartData[req.body.itemId] != 0) {
@@ -200,15 +188,13 @@ app.post("/removefromcart", fetchuser, async (req, res) => {
   res.send("Removed");
 });
 
-// Create an endpoint for getting cartdata of user
-app.post("/getcart", fetchuser, async (req, res) => {
+app.post("/api/getcart", fetchuser, async (req, res) => {
   console.log("Get Cart");
   let userData = await Users.findOne({ _id: req.user.id });
   res.json(userData.cartData);
 });
 
-// Create an endpoint for adding products using admin panel
-app.post("/addproduct", async (req, res) => {
+app.post("/api/addproduct", async (req, res) => {
   let products = await Product.find({});
   let id;
   if (products.length > 0) {
@@ -232,15 +218,16 @@ app.post("/addproduct", async (req, res) => {
   res.json({ success: true, name: req.body.name });
 });
 
-// Create an endpoint for removing products using admin panel
-app.post("/removeproduct", async (req, res) => {
+app.post("/api/removeproduct", async (req, res) => {
   await Product.findOneAndDelete({ id: req.body.id });
   console.log("Removed");
   res.json({ success: true, name: req.body.name });
 });
 
+// Serve frontend static files
 app.use(express.static(path.join(__dirname, "/../frontend/build")));
 
+// Serve frontend for all other routes
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "/../frontend/build/index.html"));
 });
