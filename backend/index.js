@@ -11,23 +11,22 @@ const port = process.env.PORT || 4000;
 app.use(express.json());
 app.use(cors());
 
-// Database Connection With MongoDB
-mongoose.connect(
-  "mongodb+srv://mistamounir02:gkw5bu350r@cluster0.r8xeksp.mongodb.net/e-commerce",
-  { useNewUrlParser: true, useUnifiedTopology: true }
-);
+// Serve static files from the public directory
+app.use(express.static(path.join(__dirname, "../frontend/public")));
 
 // Image Storage Engine
 const storage = multer.diskStorage({
-  destination: "./upload/images",
+  destination: path.join(__dirname, "../frontend/public/images"), // Save to the public/images folder
   filename: (req, file, cb) => {
-    return cb(
+    cb(
       null,
       `${file.fieldname}_${Date.now()}${path.extname(file.originalname)}`
     );
   },
 });
 const upload = multer({ storage: storage });
+
+// Route to handle image uploads
 app.post("/api/upload", upload.single("product"), (req, res) => {
   res.json({
     success: 1,
@@ -35,21 +34,34 @@ app.post("/api/upload", upload.single("product"), (req, res) => {
   });
 });
 
-// Route for Images folder
-app.use("/api/images", express.static("upload/images"));
+// Serve images from the public/images directory
+app.use(
+  "/api/images",
+  express.static(path.join(__dirname, "../frontend/public/images"))
+);
+
+// Database Connection With MongoDB
+mongoose.connect(
+  "mongodb+srv://mistamounir02:gkw5bu350r@cluster0.r8xeksp.mongodb.net/e-commerce",
+  { useNewUrlParser: true, useUnifiedTopology: true }
+);
 
 // Middleware to fetch user from token
 const fetchuser = async (req, res, next) => {
   const token = req.header("auth-token");
   if (!token) {
-    res.status(401).send({ errors: "Please authenticate using a valid token" });
+    return res
+      .status(401)
+      .send({ errors: "Please authenticate using a valid token" });
   }
   try {
     const data = jwt.verify(token, "secret_ecom");
     req.user = data.user;
     next();
   } catch (error) {
-    res.status(401).send({ errors: "Please authenticate using a valid token" });
+    return res
+      .status(401)
+      .send({ errors: "Please authenticate using a valid token" });
   }
 };
 
@@ -89,17 +101,17 @@ app.post("/api/login", async (req, res) => {
       };
       success = true;
       const token = jwt.sign(data, "secret_ecom");
-      res.json({ success, token });
+      return res.json({ success, token });
     } else {
       return res.status(400).json({
         success: success,
-        errors: "please try with correct email/password",
+        errors: "Please try with correct email/password",
       });
     }
   } else {
     return res.status(400).json({
       success: success,
-      errors: "please try with correct email/password",
+      errors: "Please try with correct email/password",
     });
   }
 });
@@ -111,7 +123,7 @@ app.post("/api/signup", async (req, res) => {
   if (check) {
     return res.status(400).json({
       success: success,
-      errors: "existing user found with this email",
+      errors: "Existing user found with this email",
     });
   }
   let cart = {};
@@ -144,14 +156,14 @@ app.get("/api/allproducts", async (req, res) => {
 
 app.get("/api/newcollections", async (req, res) => {
   let products = await Product.find({});
-  let arr = products.slice(0).slice(-8);
+  let arr = products.slice(-8);
   console.log("New Collections");
   res.send(arr);
 });
 
 app.get("/api/popularinwomen", async (req, res) => {
   let products = await Product.find({ category: "women" });
-  let arr = products.splice(0, 4);
+  let arr = products.slice(0, 4);
   console.log("Popular In Women");
   res.send(arr);
 });
@@ -198,8 +210,7 @@ app.post("/api/addproduct", async (req, res) => {
   let products = await Product.find({});
   let id;
   if (products.length > 0) {
-    let last_product_array = products.slice(-1);
-    let last_product = last_product_array[0];
+    let last_product = products[products.length - 1];
     id = last_product.id + 1;
   } else {
     id = 1;
@@ -225,11 +236,11 @@ app.post("/api/removeproduct", async (req, res) => {
 });
 
 // Serve frontend static files
-app.use(express.static(path.join(__dirname, "/../frontend/build")));
+app.use(express.static(path.join(__dirname, "../frontend/build")));
 
 // Serve frontend for all other routes
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "/../frontend/build/index.html"));
+  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
 });
 
 // Starting Express Server
