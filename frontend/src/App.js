@@ -9,7 +9,8 @@ import women_banner from "./Components/Assets/banner_women.png";
 import men_banner from "./Components/Assets/banner_mens.png";
 import kid_banner from "./Components/Assets/banner_kids.png";
 import LoginSignup from "./Pages/LoginSignup";
-export const backend_url = "/api";
+export const backend_url = `${process.env.REACT_APP_BACKEND_URL}/api`;
+
 export const currency = "$";
 
 function App() {
